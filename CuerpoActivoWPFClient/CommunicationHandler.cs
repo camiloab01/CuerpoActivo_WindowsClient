@@ -4,18 +4,21 @@ using SignalRBroadcastServiceSample.Domain;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 
-namespace WindowsClient
+namespace CuerpoActivoWPFClient
 {
     public class CommunicationHandler
     {
-        private Reminder Reminder { get; set; }
+        private String baseUrl = "http://dev-cuerpoactivo.lumenup.net/";
+        private String attachment;
 
         public CommunicationHandler()
         {
@@ -38,9 +41,28 @@ namespace WindowsClient
         {
             Application.Current.Dispatcher.Invoke(new System.Action(() =>
             {
-                TaskbarIcon taskBar = new TaskbarIcon();
-                taskBar.ShowBalloonTip(_reminder.Reminder_title, _reminder.Reminder_preview_description, BalloonIcon.Info);
+                TaskbarIcon notification = new TaskbarIcon();
+                String notificationMessage = string.Empty;
+                Icon icon = Properties.Resources.icon_colores;
+
+                if(!string.IsNullOrEmpty(_reminder.Reminder_attachment))
+                {
+                    attachment = baseUrl + _reminder.Reminder_attachment;
+                    notificationMessage = _reminder.Reminder_preview_description + Environment.NewLine + baseUrl + _reminder.Reminder_attachment;
+                    notification.TrayBalloonTipClicked += new RoutedEventHandler(notification_Click);
+                }
+                else
+                {
+                    notificationMessage = _reminder.Reminder_preview_description;
+                }
+                
+                notification.ShowBalloonTip(_reminder.Reminder_title, notificationMessage, icon, false);
             }));
+        }
+
+        private void notification_Click(object sender, RoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start(attachment);
         }
     }
 }
